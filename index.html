@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Recetario</title>
+  <meta name="description" content="Tu recetario personal con filtros por alimentos y sugerencias.">
+  <meta name="theme-color" content="#0D0A0B">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Recetario">
+  <link rel="preload" href="fonts/lora-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/figtree-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="styles.css">
+  <script src="vendor/jspdf.umd.min.js" defer></script>
+  <script type="module" src="js/app.js"></script>
+</head>
+<body>
+  <div id="app">
+    <header class="top">
+      <h1>Recetario</h1>
+      <div class="top-actions">
+        <button class="icon-btn" data-action="toggle-search" aria-label="Buscar receta">🔎</button>
+        <button class="icon-btn" data-action="open-settings" aria-label="Ajustes">⚙️</button>
+      </div>
+    </header>
+    <div id="search-wrap" hidden>
+      <input id="search" type="search" placeholder="Buscar receta..." aria-label="Buscar receta por nombre" autocomplete="off">
+    </div>
+
+    <section class="idea-zone">
+      <button class="dame-ideas" data-action="pick-idea" aria-label="Sortear receta aleatoria según filtros">¡DAME<br>IDEAS!</button>
+      <div id="idea"></div>
+    </section>
+
+    <section id="chips" class="chips" aria-label="Filtrar por alimentos"></section>
+
+    <div class="add-wrap">
+      <button class="btn-outline" data-action="open-add">+ AÑADIR RECETA</button>
+    </div>
+
+    <section class="book">
+      <div class="eyebrow">Recetario · A–Z</div>
+      <div id="list"></div>
+    </section>
+
+    <div id="sheet-root"></div>
+    <div id="toast" role="status" aria-live="polite"></div>
+  </div>
+  <noscript>Esta app necesita JavaScript.</noscript>
+</body>
+</html>

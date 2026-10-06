@@ -431,12 +431,12 @@ const actions = {
     if (!f.image && !ingredients.length && !f.title.trim()) { toast('Añade una foto, un título o ingredientes para detectar los tags'); return; }
     f.detecting = true; renderSheet();
     try {
-      const found = await detectTags({ image: f.image, title: f.title.trim(), ingredients, knownTags: S.tags, settings: S.settings });
-      if (!found.length) toast('No se detectó ningún alimento');
+      const { tags: found, note } = await detectTags({ image: f.image, title: f.title.trim(), ingredients, knownTags: S.tags, settings: S.settings });
+      if (!found.length) toast(note || 'No se detectó ningún alimento');
       else {
         await addDetectedTags(found);
         f.tags = [...new Set([...f.tags, ...found.map((t) => t.name)])];
-        toast(`Detectados: ${found.map((t) => t.name).join(', ')}`);
+        toast(`Detectados: ${found.map((t) => t.name).join(', ')}${note ? ` · ${note}` : ''}`, note ? 5000 : 2800);
         renderChips();
       }
     } catch (e) { reportErr(e); }

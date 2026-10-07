@@ -1,5 +1,5 @@
 // Service worker: la app funciona sin conexión (app shell en caché).
-const VERSION = 'recetario-v2';
+const VERSION = 'recetario-v3';
 const SHELL = [
   './', 'index.html', 'styles.css', 'manifest.webmanifest',
   'js/app.js', 'js/db.js', 'js/ai.js', 'js/img.js', 'js/pdf.js',

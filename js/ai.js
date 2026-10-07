@@ -10,13 +10,12 @@ const TEXT_PREF = [/llama-3\.3-70b/i, /llama-3\.1-8b/i, /gpt-oss-20b/i, /gpt-oss
 const NOT_CHAT = /whisper|tts|guard|embed|orpheus|playai|distil-whisper/i;
 const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
-const SYSTEM = `Eres un asistente de cocina. Te paso una receta (foto y/o título e ingredientes) y debes devolver los alimentos principales como etiquetas de filtro.
+const SYSTEM = `Eres un asistente de cocina. Te paso una receta (foto y/o título e ingredientes) y una lista cerrada de etiquetas de alimentos.
 Reglas:
-- Responde SOLO con JSON: {"tags":[{"name":"...","emoji":"..."}]}
-- Entre 1 y 6 etiquetas, en español, minúsculas, en singular y genéricas (p.ej. "pollo", "arroz", "pescado", "pasta", "marisco", "verdura", "queso", "huevo").
-- Prioriza las etiquetas de la lista "existentes" cuando encajen; solo inventa una nueva si ningún existente sirve.
-- "emoji" es un único emoji representativo del alimento.
-- No incluyas condimentos básicos (sal, aceite, pimienta) ni utensilios.`;
+- Responde SOLO con JSON: {"tags":["..."]}
+- Elige únicamente etiquetas de la lista, copiadas tal cual. NO inventes etiquetas nuevas.
+- Incluye una etiqueta solo si ese alimento es un ingrediente principal de la receta (no por llevar una pizca).
+- Si ninguna encaja, devuelve {"tags":[]}.`;
 
 let cachedModels = null;
 
@@ -63,7 +62,7 @@ async function chat(settings, model, messages) {
 // Devuelve { tags, note }. `note` avisa si hubo que prescindir de la foto.
 export async function detectTags({ image, title, ingredients, knownTags, settings }) {
   const baseText = [
-    `Etiquetas existentes: ${knownTags.join(', ') || '(ninguna)'}`,
+    `Lista de etiquetas permitidas: ${knownTags.join(', ') || '(ninguna)'}`,
     title ? `Título: ${title}` : '',
     ingredients?.length ? `Ingredientes: ${ingredients.join('; ')}` : '',
   ].filter(Boolean).join('\n');
@@ -88,11 +87,11 @@ export async function detectTags({ image, title, ingredients, knownTags, setting
     } else throw new Error('No hay ningún modelo de Groq disponible para analizar la receta (añade título o ingredientes).');
   }
 
+  const allowed = new Map(knownTags.map((t) => [t.toLowerCase(), t]));
   const seen = new Set();
   const tags = (parsed.tags || [])
-    .map((t) => (typeof t === 'string' ? { name: t } : t))
-    .map((t) => ({ name: String(t.name || '').trim().toLowerCase(), emoji: String(t.emoji || '').trim() }))
-    .filter((t) => t.name.length >= 2 && t.name.length <= 24 && !seen.has(t.name) && seen.add(t.name))
-    .slice(0, 6);
+    .map((t) => String(typeof t === 'string' ? t : t?.name || '').trim().toLowerCase())
+    .filter((t) => allowed.has(t) && !seen.has(t) && seen.add(t))
+    .map((t) => ({ name: allowed.get(t) }));
   return { tags, note };
 }

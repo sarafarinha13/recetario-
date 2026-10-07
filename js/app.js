@@ -4,17 +4,21 @@ import { exportRecipePdf } from './pdf.js';
 import { fileToDataUrl } from './img.js';
 
 /* ---------- Datos iniciales (los del prototipo) ---------- */
+// Lista fija de tags de alimento (el orden es el de las cajitas).
 const TAG_LIBRARY = {
-  pescado: '🐟', pollo: '🍗', pasta: '🍝', marisco: '🦐', arroz: '🍚',
-  cerdo: '🥓', 'champiñón': '🍄', harina: '🌾', 'panadería': '🥖', salsas: '🥣',
+  cerdo: '🥓', ternera: '🥩', pollo: '🍗', pescado: '🐟',
+  arroz: '🍚', pasta: '🍝', marisco: '🦐', patata: '🥔',
 };
+// Emojis de tags antiguos, para que las recetas ya guardadas sigan viéndose bien.
+const LEGACY_EMOJI = { 'champiñón': '🍄', harina: '🌾', 'panadería': '🥖', salsas: '🥣' };
+const TAGS_VERSION = 2;
 const EMOJI_OPTIONS = ['🍽️', '🥬', '🧀', '🥚', '🍋', '🌶️', '🫘', '🍯'];
 const LEVELS = ['Fácil', 'Medio', 'Difícil'];
 
 const r = (title, tags, time, level, rating, ingredients, steps) =>
   ({ title, tags, time, level, rating, favorite: false, image: null, ingredients, steps });
 const SEED = [
-  r('Arroz con solomillo y champiñones', ['arroz', 'cerdo', 'champiñón'], '35 min', 'Medio', 5,
+  r('Arroz con solomillo y champiñones', ['arroz', 'cerdo'], '35 min', 'Medio', 5,
     ['300 g de arroz', '250 g de solomillo de cerdo en tiras', '200 g de champiñones laminados', '1 cebolla', 'Caldo de carne', 'Aceite de oliva y sal'],
     ['Dorar el solomillo en aceite caliente y reservar.', 'Pochar la cebolla, añadir los champiñones y sofreír 5 min.', 'Incorporar el arroz, nacarar y cubrir con caldo caliente.', 'Cocinar 16-18 min, añadir el solomillo los últimos 3 min y dejar reposar.']),
   r('Poke', ['arroz', 'pescado'], '20 min', 'Fácil', 4,
@@ -23,16 +27,16 @@ const SEED = [
   r('Udon', ['pasta', 'pollo'], '25 min', 'Fácil', 4,
     ['250 g de fideos udon', '200 g de pechuga de pollo', 'Caldo dashi', 'Puerro', 'Salsa de soja'],
     ['Cocer los fideos udon según el envase y reservar.', 'Saltear el pollo en tiras hasta dorar.', 'Calentar el caldo dashi con soja y puerro.', 'Servir el udon en el caldo caliente con el pollo encima.']),
-  r('Focaccia', ['harina', 'panadería'], '12 h + 25 min', 'Medio', 5,
+  r('Focaccia', [], '12 h + 25 min', 'Medio', 5,
     ['500 g harina panificable', '5,5 g levadura', '2 cucharas de aceite', '2 cucharadas de azúcar moreno', 'Sal', 'Tomillo y sal gruesa'],
     ['Mezclar todo y reposar una noche en la nevera.', 'Extender en la bandeja con abundante aceite 20/30 min y al horno 230º 20/25 min.', 'Echar tomillo y sal gruesa.']),
-  r('Tzatziki', ['salsas'], '10 min', 'Fácil', 4,
+  r('Tzatziki', [], '10 min', 'Fácil', 4,
     ['1 pepino', '400 g de yogur griego', '2 dientes de ajo', 'Eneldo fresco', 'Aceite de oliva y sal'],
     ['Rallar el pepino y escurrir bien el agua.', 'Mezclar con el yogur, el ajo picado y el eneldo.', 'Añadir aceite y sal al gusto y enfriar antes de servir.']),
-  r('Guacamole', ['salsas'], '10 min', 'Fácil', 5,
+  r('Guacamole', [], '10 min', 'Fácil', 5,
     ['2 aguacates maduros', '1/2 cebolla morada', '1 tomate', 'Lima', 'Cilantro y sal'],
     ['Machacar el aguacate con un tenedor dejando textura.', 'Picar fino la cebolla, el tomate y el cilantro.', 'Mezclar todo con el zumo de lima y sal.']),
-  r('Albóndigas', ['cerdo', 'salsas'], '40 min', 'Medio', 4,
+  r('Albóndigas', ['cerdo'], '40 min', 'Medio', 4,
     ['500 g de carne picada de cerdo', '1 huevo', 'Pan rallado y leche', '1 cebolla', 'Tomate frito'],
     ['Mezclar la carne con huevo, pan remojado en leche y sal.', 'Formar las albóndigas y dorarlas en aceite.', 'Preparar una salsa de cebolla y tomate frito.', 'Cocer las albóndigas en la salsa 15 min a fuego lento.']),
   r('Arroz 3 delicias', ['arroz', 'pollo', 'marisco'], '25 min', 'Fácil', 4,
@@ -41,7 +45,7 @@ const SEED = [
   r('Boquerones', ['pescado'], '15 min', 'Fácil', 3,
     ['500 g de boquerones limpios', 'Vinagre y agua', 'Ajo y perejil', 'Aceite de oliva', 'Sal'],
     ['Marinar los boquerones en vinagre y agua 1-2 h en la nevera.', 'Escurrir bien y colocar en una fuente.', 'Aliñar con ajo picado, perejil y aceite de oliva.']),
-  r('Salsa teriyaki', ['salsas'], '10 min', 'Fácil', 4,
+  r('Salsa teriyaki', [], '10 min', 'Fácil', 4,
     ['100 ml de salsa de soja', '2 cucharadas de azúcar moreno', '1 cucharada de miel', 'Jengibre y ajo', 'Maicena para espesar'],
     ['Calentar la soja, el azúcar y la miel a fuego medio.', 'Añadir ajo y jengibre rallados.', 'Espesar con un poco de maicena disuelta en agua.']),
 ];
@@ -69,7 +73,7 @@ function saveSettings() {
 const $ = (sel, root = document) => root.querySelector(sel);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
-const emojiFor = (t) => S.emoji[t] || TAG_LIBRARY[t] || '🍽️';
+const emojiFor = (t) => S.emoji[t] || TAG_LIBRARY[t] || LEGACY_EMOJI[t] || '🍽️';
 const byId = (id) => S.recipes.find((x) => x.id === id);
 
 const stripeCls = (rec) => (rec.image ? '' : `stripe-${rec.id % 3}`);
@@ -102,6 +106,13 @@ async function init() {
     S.recipes = recipes;
     S.tags = (await db.kvGet('tags')) || S.tags;
     S.emoji = (await db.kvGet('emoji')) || {};
+    if ((await db.kvGet('tagsVersion')) !== TAGS_VERSION) {
+      // Pasa a la lista fija, conservando solo los tags que tú creaste con el "+".
+      const custom = S.tags.filter((t) => S.emoji[t] && !(t in TAG_LIBRARY));
+      S.tags = [...Object.keys(TAG_LIBRARY), ...custom];
+      await persistTags();
+      await db.kvSet('tagsVersion', TAGS_VERSION);
+    }
   } catch (e) {
     storageOk = false;
     S.recipes = SEED.map((s, i) => ({ ...s, id: i + 1 }));
@@ -354,16 +365,6 @@ function pickIdea() {
   renderIdea();
 }
 
-async function addDetectedTags(tags) {
-  for (const t of tags) {
-    if (!S.tags.includes(t.name)) {
-      S.tags.push(t.name);
-      if (t.emoji) S.emoji[t.name] = t.emoji;
-    }
-  }
-  await persistTags();
-}
-
 const actions = {
   'toggle-search'() {
     const w = $('#search-wrap'); w.hidden = !w.hidden;
@@ -432,12 +433,10 @@ const actions = {
     f.detecting = true; renderSheet();
     try {
       const { tags: found, note } = await detectTags({ image: f.image, title: f.title.trim(), ingredients, knownTags: S.tags, settings: S.settings });
-      if (!found.length) toast(note || 'No se detectó ningún alimento');
+      if (!found.length) toast(note || 'No se detectó ningún alimento de tu lista');
       else {
-        await addDetectedTags(found);
         f.tags = [...new Set([...f.tags, ...found.map((t) => t.name)])];
         toast(`Detectados: ${found.map((t) => t.name).join(', ')}${note ? ` · ${note}` : ''}`, note ? 5000 : 2800);
-        renderChips();
       }
     } catch (e) { reportErr(e); }
     f.detecting = false;
